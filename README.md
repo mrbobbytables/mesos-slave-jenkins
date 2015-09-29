@@ -10,8 +10,8 @@ For further information regarding the Jenkins-Mesos Framework, please see their 
 
 ##### Version Information:
 
-* **Container Release:** 1.0.0
-* **Mesos:** 0.23.0
+* **Container Release:** 1.1.0
+* **Mesos:** 0.24.1
 * **Docker:** 1.8.2-0~trusty
 
 
