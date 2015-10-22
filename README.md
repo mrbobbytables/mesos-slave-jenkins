@@ -11,8 +11,8 @@ For further information regarding the Jenkins-Mesos Framework, please see their 
 ##### Version Information:
 
 * **Container Release:** 1.1.0
-* **Mesos:** 0.24.1
-* **Docker:** 1.8.2-0~trusty
+* **Mesos:** 0.24.1-0.2.35.ubuntu1404
+* **Docker:** 1.8.3-0~trusty
 
 
 **Services Include:**
@@ -40,9 +40,9 @@ For further information regarding the Jenkins-Mesos Framework, please see their 
 
 ### Usage
 
-All mesos commands should be passed via environment variables (please see the [example run command](#example-run-command) below). For Mesos documentation, please see the configuration docs associated with the release here: [mesos@4ce5475](https://github.com/apache/mesos/blob/4ce5475346a0abb7ef4b7ffc9836c5836d7c7a66/docs/configuration.md)
+All mesos commands should be passed via environment variables (please see the [example run command](#example-run-command) below). For Mesos documentation, please see the configuration docs associated with the release here: [mesos@4487380](https://github.com/apache/mesos/blob/44873806c2bb55da37e9adbece938274d8cd7c48/docs/configuration.md)
 
-In a local **proof of concept** environment, the only variable that **MUST** be definied is `MESOS_MASTER`.
+In a local **proof of concept** environment, the only variable that **MUST** be defined is `MESOS_MASTER`.
 
 However, that will leave the slave with a fraction of it's functionality. To run in a useful fashion, the following should be set, `ENVIRONMENT`, `MESOS_MASTER`, `MESOS_WORK_DIR`, and `MESOS_DOCKER_SANDBOX_DIRECTORY`.
 
@@ -52,7 +52,7 @@ However, that will leave the slave with a fraction of it's functionality. To run
 
 * `MESOS_WORK_DIR` - Path to the directory in which framework directories are placed.
 
-* `MESOS_DOCKER_SANDBOX_DIRECTORY` - Path to directory used to map the sandbox to Docker containers.
+* `MESOS_SANDBOX_DIRECTORY` - Path to directory used to map the sandbox to Docker containers.
 
 In addition to the above, there are several things to note for full compatibility when operating a mesos slave in a container with docker as a supported containerizer.
  * The container should be run with `host` networking.
@@ -61,7 +61,7 @@ In addition to the above, there are several things to note for full compatibilit
   * `/var/run/docker.sock:/var/run/docker.sock:rw`
   * `/sys:/sys:ro`
   * The directory used for `MESOS_WORK_DIR` as `rw`
-  * The directory used for `MESOS_DOCKER_SANDBOX_DIRECTORY` as `rw`
+  * The directory used for `MESOS_SANDBOX_DIRECTORY` as `rw`
 
 
 
@@ -73,22 +73,26 @@ In either case, if you intend on baking the credentials into the image. This wou
 ---
 
 ### Example Run Command
+
 ```
-docker run -d --net=host --cap-add=SYS_ADMIN \
--e ENVIRONMENT=production \
--e PARENT_HOST=$(hostname) \
--e MESOS_IP=10.10.0.111 \
--e MESOS_MASTER=zk://10.10.0.11:2181,10.10.0.12:2181,10.10.0.13:2181/mesos \
--e MESOS_REGISTRATION_TIMEOUT=5min \
--e MESOS_HOSTNAME=10.10.0.111 \
--e MESOS_DOCKER_SANDBOX_DIRECTORY=/data/mesos/sandbox \
--e MESOS_WORKDIR=/data/mesos/workdir \
--v /data/mesos/workdir:/data/mesos/workdir:rw \
--v /data/mesos/sandbox:/data/mesos/sandbox:rw \
--v /sys:/sys:ro \
--v /usr/bin/docker:/usr/bin/docker:ro \
--v /var/run/docker.sock:/var/run/docker.sock:rw \
-mesos-slave-jenkins
+docker run -d --net=host    \
+--name=mesosslave           \
+--cap-add=SYS_ADMIN         \
+-e ENVIRONMENT=production   \
+-e PARENT_HOST=$(hostname)  \
+-e MESOS_IP=10.10.0.111     \
+-e MESOS_MASTER=zk://10.10.0.11:2181,10.10.0.12:2181,10.10.0.13:2181/mesos  \
+-e MESOS_REGISTRATION_TIMEOUT=5min    \
+-e MESOS_CONTAINERIZERS=docker,mesos  \
+-e MESOS_HOSTNAME=10.10.0.111         \
+-e MESOS_SANDBOX_DIRECTORY=/data/mesos/sandbox   \
+-e MESOS_WORKDIR=/data/mesos/workdir             \
+-v /data/mesos/workdir:/data/mesos/workdir:rw    \
+-v /data/mesos/sandbox:/data/mesos/sandbox:rw    \
+-v /usr/bin/docker:/usr/bin/docker:ro            \
+-v /var/run/docker.sock:/var/run/docker.sock:rw  \
+-v /sys/:/sys:ro  \
+mesos-slave
 
 ```
 
@@ -98,18 +102,18 @@ mesos-slave-jenkins
 ### Modification and Anatomy of the Project
 
 **File Structure**
-The directory `skel` in the project root maps to the root of the filesystem once the container is built. Files and folders placed there will map to their corrisponding location within the container. 
+The directory `skel` in the project root maps to the root of the file system once the container is built. Files and folders placed there will map to their corresponding location within the container.
 
 **Init**
-The init script (`./init.sh`) found at the root of the directory is the entry process for the container. It's role is to simply set specific environment variables and modify any subsiquently required configuration files.
+The init script (`./init.sh`) found at the root of the directory is the entry process for the container. It's role is to simply set specific environment variables and modify any subsequently required configuration files.
 
 **Supervisord**
-All supervisord configs can be found in `/etc/supervisor/conf.d/`. Services by default will redirect their stdout to `/dev/fd/1` and stderr to `/dev/fd/2` allowing for service's console output to be displayed. Most applications can log to both stdout and their respecively specified log file. 
+All supervisord configs can be found in `/etc/supervisor/conf.d/`. Services by default will redirect their stdout to `/dev/fd/1` and stderr to `/dev/fd/2` allowing for service's console output to be displayed. Most applications can log to both stdout and their respectively specified log file.
 
 In some cases (such as with zookeeper), it is possible to specify different logging levels and formats for each location.
 
 **Logstash-Forwarder**
-The Logstash-Forwarder binary and default configuration file can be found in `/skel/opt/logstash-forwarder`. It is ideal to bake the Logstash Server certificate into the base container at this location. If the certificate is called `logstash-forwarder.crt`, the default supplied Logstash-Forwarder config should not need to be modified, and the server setting may be passed through the `SERICE_LOGSTASH_FORWARDER_ADDRESS` environment variable.
+The Logstash-Forwarder binary and default configuration file can be found in `/skel/opt/logstash-forwarder`. It is ideal to bake the Logstash Server certificate into the base container at this location. If the certificate is called `logstash-forwarder.crt`, the default supplied Logstash-Forwarder config should not need to be modified, and the server setting may be passed through the `SERVICE_LOGSTASH_FORWARDER_ADDRESS` environment variable.
 
 In practice, the supplied Logstash-Forwarder config should be used as an example to produce one tailored to each deployment.
 
@@ -143,7 +147,7 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 
 * `PARENT_HOST` - The name of the parent host. If Logstash-Forwarder is enabled, this will populate the `parent_host` field in the Logstash-Forwarder configuration file.
 
-* `MESOS_LOG_DIR` - The path to the directiory in which Mesos stores it's logs.
+* `MESOS_LOG_DIR` - The path to the directory in which Mesos stores its logs.
 
 * `MESOS_WORK_DIR` - Path to the directory in which framework directories are placed.
 
@@ -192,7 +196,7 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 
 #### Mesos-Slave
 
-As stated in the [Usage](#usage) section, Mesos-slave configuration information can be found in the github docs releated to the Mesos Release: [mesos@4ce5475](https://github.com/apache/mesos/blob/4ce5475346a0abb7ef4b7ffc9836c5836d7c7a66/docs/configuration.md).
+As stated in the [Usage](#usage) section, Mesos-slave configuration information can be found in the github docs releated to the Mesos Release: [mesos@4487380](https://github.com/apache/mesos/blob/44873806c2bb55da37e9adbece938274d8cd7c48/docs/configuration.md).
 
 The actual mesos start command is passed to supervisor via the `SERVICE_MESOS_CMD` environment variable, and defaults to `mesos-slave`.
 
@@ -200,22 +204,24 @@ The actual mesos start command is passed to supervisor via the `SERVICE_MESOS_CM
 
 ##### Defaults
 
-| **Variable**           | **Default**        |
-|------------------------|--------------------|
-| `MESOS_CONTAINERIZERS` | `docker,mesos`     |
-| `MESOS_LOG_DIR`        | `/var/log/mesos`   |
-| `MESOS_WORK_DIR`       |                    |
-| `SERVICE_MESOS_CMD`    | `mesos-slave`      |
+| **Variable**              | **Default**          |
+|---------------------------|----------------------|
+| `MESOS_CONTAINERIZERS`    | `docker,mesos`       |
+| `MESOS_LOG_DIR`           | `/var/log/mesos`     |
+| `MESOS_MASTER`            |                      |
+| `MESOS_SANDBOX_DIRECTORY` | `/mnt/mesos/sandbox` |
+| `MESOS_WORK_DIR`          |                      |
+| `SERVICE_MESOS_CMD`       | `mesos-slave`        |
 
 ##### Description
 
-* `MESOS_CONTAINERIZES` - Comma seperated list of containerizers for use with Mesos. Priority is assigned in the order in which they're passed.
+* `MESOS_CONTAINERIZES` - Comma separated list of containerizers for use with Mesos. Priority is assigned in the order in which they're passed.
 
-* `MESOS_LOG_DIR` - The path to the directiory in which Mesos stores it's logs.
+* `MESOS_LOG_DIR` - The path to the directory in which Mesos stores its logs.
 
 * `MESOS_WORK_DIR` - Path to the directory in which framework directories are placed.
 
-* `SERVICE_MESOS_CMD` -  The command that is passed to supervisor. If overriding, must be an escaped python string expression. Please see the [Supervisord Comma
+* `SERVICE_MESOS_CMD` -  The command that is passed to supervisor. If overriding, must be an escaped python string expression. Please see the The command that is passed to supervisor. If overriding, must be an escaped python string expression. Please see the [Supervisord Command Documentation](http://supervisord.org/configuration.html#program-x-section-settings) for further information.
 
 
 ---
@@ -274,7 +280,7 @@ Redpill is a small script that performs status checks on services managed throug
 
 * `SERVICE_REDPILL` - Enables or disables the Redpill service. Set automatically depending on the `ENVIRONMENT`. See the Environment section.  (**Options:** `enabled` or `disabled`)
 
-* `SERVICE_REDPILL_MONITOR` - The name of the supervisord service(s) that the Redpill service check script should monitor. 
+* `SERVICE_REDPILL_MONITOR` - The name of the supervisord service(s) that the Redpill service check script should monitor.
 
 * `SERVICE_REDPILL_INTERVAL` - The interval in which Redpill polls supervisor for status checks. (Default for the script is 30 seconds)
 
@@ -291,7 +297,7 @@ Redpill - Supervisor status monitor. Terminates the supervisor process if any sp
 
 -c | --cleanup    Optional path to cleanup script that should be executed upon exit.
 -h | --help       This help text.
--i | --inerval    Optional interval at which the service check is performed in seconds. (Default: 30)
+-i | --interval   Optional interval at which the service check is performed in seconds. (Default: 30)
 -s | --service    A comma delimited list of the supervisor service names that should be monitored.
 ```
 ---
