@@ -10,8 +10,8 @@ For further information regarding the Jenkins-Mesos Framework, please see their 
 
 ##### Version Information:
 
-* **Container Release:** 1.1.3
-* **Mesos:** 0.24.1-0.2.35.ubuntu1404
+* **Container Release:** 1.1.4
+* **Mesos:** 0.25.0-0.2.70.ubuntu1404
 * **Docker:** 1.9.1-0~trusty
 
 
@@ -42,7 +42,7 @@ For further information regarding the Jenkins-Mesos Framework, please see their 
 
 ### Usage
 
-All mesos commands should be passed via environment variables (please see the [example run command](#example-run-command) below). For Mesos documentation, please see the configuration docs associated with the release here: [mesos@4487380](https://github.com/apache/mesos/blob/44873806c2bb55da37e9adbece938274d8cd7c48/docs/configuration.md)
+All mesos commands should be passed via environment variables (please see the [example run command](#example-run-command) below). For Mesos documentation, please see the configuration docs associated with the release here: [mesos@2dd7f7e](https://github.com/apache/mesos/tree/2dd7f7ee115fe00b8e098b0a10762a4fa8f4600f/docs/configuration.md)
 
 In a local **proof of concept** environment, the only variable that **MUST** be defined is `MESOS_MASTER`.
 
@@ -76,7 +76,7 @@ In either case, if you intend on baking the credentials into the image. This wou
 
 ### Example Run Command
 
-```
+```bash
 docker run -d --net=host    \
 --name=mesosslave           \
 --cap-add=SYS_ADMIN         \
@@ -215,7 +215,7 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 
 #### Mesos-Slave
 
-As stated in the [Usage](#usage) section, Mesos-slave configuration information can be found in the github docs releated to the Mesos Release: [mesos@4487380](https://github.com/apache/mesos/blob/44873806c2bb55da37e9adbece938274d8cd7c48/docs/configuration.md).
+As stated in the [Usage](#usage) section, Mesos-slave configuration information can be found in the github docs releated to the Mesos Release: [mesos@2dd7f7e](https://github.com/apache/mesos/tree/2dd7f7ee115fe00b8e098b0a10762a4fa8f4600f/docs/configuration.md).
 
 The actual mesos start command is passed to supervisor via the `SERVICE_MESOS_CMD` environment variable, and defaults to `mesos-slave`.
 
@@ -299,7 +299,7 @@ logrotate.sh - Small wrapper script for logrotate.
 ##### Supplied Cleanup Script
 
 The below cleanup script will remove all but the latest 5 rotated logs.
-```
+```bash
 #!/bin/bash
 
 mld=${MESOS_LOG_DIR:-/var/log/mesos}

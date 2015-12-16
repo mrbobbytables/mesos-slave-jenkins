@@ -1,14 +1,14 @@
 ################################################################################
-# mesos-slave-jenkins:1.1.3
-# Date: 11/23/2015
+# mesos-slave-jenkins:1.1.4
+# Date: 12/16/2015
 # Docker Version: 1.9.1~trusty
-# Mesos Version: 0.24.1-0.2.35.ubuntu1404
+# Mesos Version: 0.25.0-0.2.70.ubuntu1404
 #
 # Description:
 # Mesos Slave container with jenkins user added.
 ################################################################################
 
-FROM mrbobbytables/mesos-slave:1.1.3
+FROM mrbobbytables/mesos-slave:1.1.4
 
 MAINTAINER Bob Killen / killen.bob@gmail.com / @mrbobbytables
 
